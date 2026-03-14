@@ -1,9 +1,9 @@
 package com.flowcare.backend.storage.service
 
+import com.flowcare.backend.storage.config.StorageProperties
 import com.flowcare.backend.storage.exception.FileStorageException
 import com.flowcare.backend.storage.exception.InvalidFileException
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.IOException
@@ -14,14 +14,10 @@ import java.nio.file.StandardCopyOption
 import java.util.*
 
 @Service
-class FileStorageService(
-    @Value("\${storage.id-documents-dir}") private val idDocumentsDir: String,
-    @Value("\${storage.max-file-size}") private val maxFileSize: Long,
-    @Value("\${storage.allowed-image-types}") private val allowedImageTypes: List<String>,
-    @Value("\${storage.allowed-extensions}") private val allowedExtensions: List<String>
-) {
+class FileStorageService(private val properties: StorageProperties) {
+
     private val log = LoggerFactory.getLogger(FileStorageService::class.java)
-    private val uploadPath: Path = Paths.get(idDocumentsDir).toAbsolutePath().normalize()
+    private val uploadPath: Path = Paths.get(properties.idDocumentsDir).toAbsolutePath().normalize()
 
     init {
         try {
@@ -49,7 +45,7 @@ class FileStorageService(
     }
 
     fun loadFile(relativePath: String): Path {
-        val basePath = Paths.get(idDocumentsDir).toAbsolutePath().normalize().parent
+        val basePath = Paths.get(properties.uploadDir).toAbsolutePath().normalize()
         return basePath.resolve(relativePath).normalize()
     }
 
@@ -57,16 +53,16 @@ class FileStorageService(
         if (file.isEmpty) {
             throw InvalidFileException("File is empty")
         }
-        if (file.size > maxFileSize) {
-            throw InvalidFileException("File size exceeds maximum limit of ${maxFileSize / 1024 / 1024} MB")
+        if (file.size > properties.maxFileSize) {
+            throw InvalidFileException("File size exceeds maximum limit of ${properties.maxFileSize / 1024 / 1024} MB")
         }
         val contentType = file.contentType
-        if (contentType == null || contentType !in allowedImageTypes) {
-            throw InvalidFileException("Invalid file type. Allowed types: ${allowedImageTypes.joinToString(", ")}")
+        if (contentType == null || contentType !in properties.allowedImageTypes) {
+            throw InvalidFileException("Invalid file type. Allowed types: ${properties.allowedImageTypes.joinToString(", ")}")
         }
         val extension = getFileExtension(file.originalFilename ?: "").lowercase()
-        if (extension !in allowedExtensions) {
-            throw InvalidFileException("Invalid file extension. Allowed extensions: ${allowedExtensions.joinToString(", ")}")
+        if (extension !in properties.allowedExtensions) {
+            throw InvalidFileException("Invalid file extension. Allowed extensions: ${properties.allowedExtensions.joinToString(", ")}")
         }
     }
 

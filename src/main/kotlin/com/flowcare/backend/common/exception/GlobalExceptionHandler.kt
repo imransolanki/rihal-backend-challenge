@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.multipart.MaxUploadSizeExceededException
+import org.springframework.web.multipart.support.MissingServletRequestPartException
 import java.time.LocalDateTime
 
 @RestControllerAdvice
@@ -55,6 +56,11 @@ class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException::class)
     fun handleMaxUploadSize(ex: MaxUploadSizeExceededException): ResponseEntity<ErrorResponse> {
         return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", "File size exceeds maximum limit")
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException::class)
+    fun handleMissingPart(ex: MissingServletRequestPartException): ResponseEntity<ErrorResponse> {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", "Required part '${ex.requestPartName}' is not present")
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)

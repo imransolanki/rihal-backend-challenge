@@ -68,19 +68,15 @@ class SeedService(
         log.info("Seeding {} users", allUsers.size)
         allUsers.forEach { u ->
             val hashedPassword = passwordEncoder.encode(u.password)
+            // Remove any conflicting user with same username but different id
+            jdbcTemplate.update(
+                "DELETE FROM users WHERE username = ? AND id != ?",
+                u.username, u.id
+            )
             jdbcTemplate.update(
                 """INSERT INTO users (id, username, password, role, full_name, email, phone, branch_id, is_active)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                   ON CONFLICT (id) DO UPDATE SET
-                     username = EXCLUDED.username,
-                     password = EXCLUDED.password,
-                     role = EXCLUDED.role,
-                     full_name = EXCLUDED.full_name,
-                     email = EXCLUDED.email,
-                     phone = EXCLUDED.phone,
-                     branch_id = EXCLUDED.branch_id,
-                     is_active = EXCLUDED.is_active,
-                     updated_at = CURRENT_TIMESTAMP""",
+                   ON CONFLICT (id) DO NOTHING""",
                 u.id, u.username, hashedPassword, u.role,
                 u.fullName, u.email, u.phone, u.branchId, u.isActive
             )
