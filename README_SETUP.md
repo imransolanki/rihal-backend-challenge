@@ -157,6 +157,79 @@ curl -u johndoe:SecurePass123 http://localhost:8080/api/test/protected
 | DB_PASSWORD | Database password | flowcare_pass |
 | SPRING_PROFILES_ACTIVE | Active Spring profile | dev |
 
+## Authentication and Authorization
+
+FlowCare uses HTTP Basic Authentication with role-based access control (RBAC).
+
+### Roles
+
+| Role | Scope |
+|------|-------|
+| ADMIN | System-wide — all branches, all data |
+| BRANCH_MANAGER | Branch-scoped — only assigned branch |
+| STAFF | Branch-scoped — only assigned appointments |
+| CUSTOMER | Self-scoped — only own appointments |
+
+### Authentication
+
+All protected endpoints require Basic Auth:
+```bash
+curl -u username:password http://localhost:8080/api/endpoint
+```
+
+### Authorization Examples
+
+**Admin — system-wide access:**
+```bash
+curl -u admin:Admin@123 http://localhost:8080/api/test/admin
+# 200 OK: {"message":"Admin access granted - system-wide features available","role":"ADMIN",...}
+```
+
+**Branch Manager — branch-scoped access:**
+```bash
+# Own branch → 200 OK
+curl -u mgr_muscat:Manager@123 http://localhost:8080/api/test/manager/br_muscat_001
+
+# Other branch → 403 Forbidden
+curl -u mgr_muscat:Manager@123 http://localhost:8080/api/test/manager/br_suhar_001
+```
+
+**Staff — cannot create slots:**
+```bash
+# Staff endpoint → 200 OK
+curl -u staff_muscat_1:Staff@123 http://localhost:8080/api/test/staff
+
+# Slot creation → 403 Forbidden
+curl -X POST -u staff_muscat_1:Staff@123 http://localhost:8080/api/test/slots
+```
+
+**Customer — cannot access admin features:**
+```bash
+# Customer endpoint → 200 OK
+curl -u cust_ahmed:Customer@123 http://localhost:8080/api/test/customer
+
+# Admin endpoint → 403 Forbidden
+curl -u cust_ahmed:Customer@123 http://localhost:8080/api/test/admin-only
+```
+
+**Unauthenticated → 401 Unauthorized:**
+```bash
+curl http://localhost:8080/api/test/admin
+```
+
+### Public Endpoints (No Auth Required)
+
+- `GET /api/health`
+- `POST /api/auth/register`
+
+### HTTP Status Codes
+
+| Status | Meaning |
+|--------|---------|
+| 200 | Success |
+| 401 | No credentials or invalid credentials |
+| 403 | Valid credentials but insufficient permissions |
+
 ## Running Tests
 
 ```bash
