@@ -12,3 +12,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+seed:
+  enabled: ${SEED_ENABLED:true}
+  file-path: classpath:data/seed.json
