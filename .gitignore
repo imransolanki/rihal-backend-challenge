@@ -18,5 +18,8 @@ Thumbs.db
 *.log
 .env
 
+# Uploads
+uploads/
+
 # Kiro
 .kiro/

@@ -12,7 +12,28 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 10MB
 
 seed:
   enabled: ${SEED_ENABLED:true}
   file-path: classpath:data/seed.json
+
+storage:
+  upload-dir: ./uploads
+  id-documents-dir: ${storage.upload-dir}/id_documents
+  max-file-size: 5242880
+  allowed-image-types:
+    - image/jpeg
+    - image/png
+    - image/gif
+    - image/bmp
+  allowed-extensions:
+    - jpg
+    - jpeg
+    - png
+    - gif
+    - bmp

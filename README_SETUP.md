@@ -115,6 +115,39 @@ seed:
   enabled: false
 ```
 
+## Customer Registration
+
+Register a new customer with ID document upload:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -F "username=johndoe" \
+  -F "password=SecurePass123" \
+  -F "fullName=John Doe" \
+  -F "email=john.doe@example.com" \
+  -F "phone=+96890000001" \
+  -F "idDocument=@/path/to/id_document.jpg"
+```
+
+Response (201 Created):
+```json
+{
+  "id": "usr_cust_a1b2c3d4e5f6",
+  "username": "johndoe",
+  "fullName": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+96890000001",
+  "message": "Registration successful"
+}
+```
+
+ID document requirements: JPEG/PNG/GIF/BMP, max 5 MB. Files stored in `./uploads/id_documents/`.
+
+After registration, authenticate with Basic Auth:
+```bash
+curl -u johndoe:SecurePass123 http://localhost:8080/api/test/protected
+```
+
 ## Environment Variables
 
 | Variable | Description | Default |

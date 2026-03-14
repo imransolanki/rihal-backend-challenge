@@ -30,6 +30,9 @@ data class User(
     @Column(name = "branch_id")
     val branchId: String? = null,
 
+    @Column(name = "id_document_path")
+    val idDocumentPath: String? = null,
+
     @Column(name = "is_active", nullable = false)
     val isActive: Boolean = true,
 
