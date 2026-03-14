@@ -67,6 +67,54 @@ Test with authentication (after seeding in Story 2):
 curl -u admin:Admin@123 http://localhost:8080/api/test/protected
 ```
 
+## Database Seeding
+
+The application automatically seeds the database on startup with data from `example.json`:
+- 2 branches (Muscat, Suhar)
+- 6 service types (3 per branch)
+- 10 users (1 admin, 2 managers, 4 staff, 3 customers)
+- 6 staff-service assignments
+- 14 slots
+- 2 appointments
+- 2 audit log entries
+
+### Seed Credentials
+
+| Username | Password | Role |
+|----------|----------|------|
+| admin | Admin@123 | ADMIN |
+| mgr_muscat | Manager@123 | BRANCH_MANAGER |
+| mgr_suhar | Manager@123 | BRANCH_MANAGER |
+| staff_muscat_1 | Staff@123 | STAFF |
+| staff_muscat_2 | Staff@123 | STAFF |
+| staff_suhar_1 | Staff@123 | STAFF |
+| staff_suhar_2 | Staff@123 | STAFF |
+| cust_ahmed | Customer@123 | CUSTOMER |
+| cust_fatima | Customer@123 | CUSTOMER |
+| cust_khalid | Customer@123 | CUSTOMER |
+
+### Verify Seeding
+
+```bash
+curl -u admin:Admin@123 http://localhost:8080/api/test/protected
+```
+
+### Idempotency
+
+Seeding uses PostgreSQL `INSERT ... ON CONFLICT` — running the app multiple times won't create duplicates.
+
+### Disable Seeding
+
+```bash
+SEED_ENABLED=false ./gradlew bootRun
+```
+
+Or in `application.yml`:
+```yaml
+seed:
+  enabled: false
+```
+
 ## Environment Variables
 
 | Variable | Description | Default |
