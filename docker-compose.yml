@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: flowcare_postgres
+    environment:
+      POSTGRES_DB: flowcare_db
+      POSTGRES_USER: flowcare_user
+      POSTGRES_PASSWORD: flowcare_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
