@@ -67,11 +67,21 @@ class SeedService(
         val allUsers = users.admin + users.branchManagers + users.staff + users.customers
         log.info("Seeding {} users", allUsers.size)
         allUsers.forEach { u ->
+            val hashedPassword = passwordEncoder.encode(u.password)
             jdbcTemplate.update(
                 """INSERT INTO users (id, username, password, role, full_name, email, phone, branch_id, is_active)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                   ON CONFLICT (username) DO NOTHING""",
-                u.id, u.username, passwordEncoder.encode(u.password), u.role,
+                   ON CONFLICT (id) DO UPDATE SET
+                     username = EXCLUDED.username,
+                     password = EXCLUDED.password,
+                     role = EXCLUDED.role,
+                     full_name = EXCLUDED.full_name,
+                     email = EXCLUDED.email,
+                     phone = EXCLUDED.phone,
+                     branch_id = EXCLUDED.branch_id,
+                     is_active = EXCLUDED.is_active,
+                     updated_at = CURRENT_TIMESTAMP""",
+                u.id, u.username, hashedPassword, u.role,
                 u.fullName, u.email, u.phone, u.branchId, u.isActive
             )
         }
