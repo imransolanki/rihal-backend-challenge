@@ -34,9 +34,9 @@ class BranchControllerTest {
     fun setup() {
         serviceTypeRepository.deleteAll()
         branchRepository.deleteAll()
-        cacheManager.cacheNames.forEach { cacheName ->
-            cacheManager.getCache(cacheName)?.clear()
-        }
+        cacheManager.getCache("branches")?.clear()
+        cacheManager.getCache("services")?.clear()
+        cacheManager.getCache("branchWithServices")?.clear()
     }
 
     @Test

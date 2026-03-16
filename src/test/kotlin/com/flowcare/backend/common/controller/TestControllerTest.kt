@@ -3,6 +3,8 @@ package com.flowcare.backend.common.controller
 import com.flowcare.backend.auth.model.Role
 import com.flowcare.backend.auth.model.User
 import com.flowcare.backend.auth.repository.UserRepository
+import com.flowcare.backend.branch.model.Branch
+import com.flowcare.backend.branch.repository.BranchRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,11 +22,23 @@ class TestControllerTest {
 
     @Autowired private lateinit var mockMvc: MockMvc
     @Autowired private lateinit var userRepository: UserRepository
+    @Autowired private lateinit var branchRepository: BranchRepository
     @Autowired private lateinit var passwordEncoder: PasswordEncoder
 
     @BeforeEach
     fun setup() {
         userRepository.deleteAll()
+        branchRepository.deleteAll()
+        
+        // Create branch that users will reference
+        branchRepository.save(Branch(
+            id = "br_muscat_001",
+            name = "Test Branch",
+            city = "Muscat",
+            address = "Test Address",
+            isActive = true
+        ))
+        
         userRepository.saveAll(listOf(
             User(id = "t_admin", username = "t_admin", password = passwordEncoder.encode("password"),
                 role = Role.ADMIN, fullName = "Admin", email = "t_admin@test.com"),

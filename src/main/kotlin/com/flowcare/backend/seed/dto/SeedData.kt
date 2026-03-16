@@ -62,6 +62,7 @@ data class SlotDto(
     @JsonProperty("start_at") val startAt: String,
     @JsonProperty("end_at") val endAt: String,
     val capacity: Int = 1,
+    @JsonProperty("booked_count") val bookedCount: Int = 0,
     @JsonProperty("is_active") val isActive: Boolean = true
 )
 

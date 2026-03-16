@@ -99,13 +99,13 @@ class SeedService(
         log.info("Seeding {} slots", slots.size)
         slots.forEach { s ->
             jdbcTemplate.update(
-                """INSERT INTO slots (id, branch_id, service_type_id, staff_id, start_at, end_at, capacity, is_active)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """INSERT INTO slots (id, branch_id, service_type_id, staff_id, start_at, end_at, capacity, booked_count, is_active)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                    ON CONFLICT (id) DO NOTHING""",
                 s.id, s.branchId, s.serviceTypeId, s.staffId,
                 OffsetDateTime.parse(s.startAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 OffsetDateTime.parse(s.endAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                s.capacity, s.isActive
+                s.capacity, s.bookedCount, s.isActive
             )
         }
     }
