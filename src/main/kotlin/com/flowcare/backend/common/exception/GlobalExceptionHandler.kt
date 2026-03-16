@@ -6,6 +6,9 @@ import com.flowcare.backend.appointment.exception.SlotNotAvailableException
 import com.flowcare.backend.auth.exception.EmailAlreadyExistsException
 import com.flowcare.backend.auth.exception.UsernameAlreadyExistsException
 import com.flowcare.backend.common.dto.ErrorResponse
+import com.flowcare.backend.slot.exception.SlotAlreadyDeletedException
+import com.flowcare.backend.slot.exception.SlotHasActiveBookingsException
+import com.flowcare.backend.slot.exception.SlotValidationException
 import com.flowcare.backend.storage.exception.FileStorageException
 import com.flowcare.backend.storage.exception.InvalidFileException
 import org.slf4j.LoggerFactory
@@ -86,6 +89,21 @@ class GlobalExceptionHandler {
         val errors = ex.bindingResult.fieldErrors
             .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
         return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed: $errors")
+    }
+
+    @ExceptionHandler(SlotValidationException::class)
+    fun handleSlotValidationException(ex: SlotValidationException): ResponseEntity<ErrorResponse> {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex.message ?: "Validation error")
+    }
+
+    @ExceptionHandler(SlotAlreadyDeletedException::class)
+    fun handleSlotAlreadyDeletedException(ex: SlotAlreadyDeletedException): ResponseEntity<ErrorResponse> {
+        return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.message ?: "Slot already deleted")
+    }
+
+    @ExceptionHandler(SlotHasActiveBookingsException::class)
+    fun handleSlotHasActiveBookingsException(ex: SlotHasActiveBookingsException): ResponseEntity<ErrorResponse> {
+        return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.message ?: "Slot has active bookings")
     }
 
     @ExceptionHandler(Exception::class)

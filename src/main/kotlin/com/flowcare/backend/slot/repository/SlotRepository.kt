@@ -42,4 +42,23 @@ interface SlotRepository : JpaRepository<Slot, String> {
         date: OffsetDateTime,
         now: OffsetDateTime
     ): List<Slot>
+
+    fun findByBranchId(branchId: String): List<Slot>
+
+    fun findByBranchIdAndServiceTypeId(branchId: String, serviceTypeId: String): List<Slot>
+
+    @Query("""
+        SELECT s FROM Slot s 
+        WHERE s.branchId = :branchId 
+        AND s.deletedAt IS NULL
+        ORDER BY s.startAt ASC
+    """)
+    fun findActiveByBranchId(branchId: String): List<Slot>
+
+    @Query("""
+        SELECT s FROM Slot s 
+        WHERE s.deletedAt IS NOT NULL
+        AND s.deletedAt < :cutoffDate
+    """)
+    fun findSoftDeletedBefore(cutoffDate: OffsetDateTime): List<Slot>
 }
