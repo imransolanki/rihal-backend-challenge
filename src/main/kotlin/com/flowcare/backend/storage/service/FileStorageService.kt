@@ -44,6 +44,23 @@ class FileStorageService(private val properties: StorageProperties) {
         }
     }
 
+    fun storeAppointmentAttachment(file: MultipartFile, appointmentId: String): String {
+        validateFile(file)
+        val extension = getFileExtension(file.originalFilename ?: "")
+        val fileName = "appt_${appointmentId}_${UUID.randomUUID()}.$extension"
+        val attachmentPath = Paths.get(properties.uploadDir, "attachments").toAbsolutePath().normalize()
+        
+        try {
+            Files.createDirectories(attachmentPath)
+            Files.copy(file.inputStream, attachmentPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING)
+            val relativePath = "attachments/$fileName"
+            log.info("Attachment stored: {}", relativePath)
+            return relativePath
+        } catch (e: IOException) {
+            throw FileStorageException("Failed to store attachment: ${file.originalFilename}", e)
+        }
+    }
+
     fun loadFile(relativePath: String): Path {
         val basePath = Paths.get(properties.uploadDir).toAbsolutePath().normalize()
         return basePath.resolve(relativePath).normalize()

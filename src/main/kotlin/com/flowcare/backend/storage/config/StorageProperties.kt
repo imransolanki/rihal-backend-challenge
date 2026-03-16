@@ -7,6 +7,6 @@ data class StorageProperties(
     val uploadDir: String = "./uploads",
     val idDocumentsDir: String = "./uploads/id_documents",
     val maxFileSize: Long = 5242880,
-    val allowedImageTypes: List<String> = listOf("image/jpeg", "image/png", "image/gif", "image/bmp"),
-    val allowedExtensions: List<String> = listOf("jpg", "jpeg", "png", "gif", "bmp")
+    val allowedImageTypes: List<String> = listOf("image/jpeg", "image/png", "image/gif", "image/bmp", "application/pdf"),
+    val allowedExtensions: List<String> = listOf("jpg", "jpeg", "png", "gif", "bmp", "pdf")
 )

@@ -1,5 +1,8 @@
 package com.flowcare.backend.common.exception
 
+import com.flowcare.backend.appointment.exception.AppointmentNotFoundException
+import com.flowcare.backend.appointment.exception.InvalidAppointmentStateException
+import com.flowcare.backend.appointment.exception.SlotNotAvailableException
 import com.flowcare.backend.auth.exception.EmailAlreadyExistsException
 import com.flowcare.backend.auth.exception.UsernameAlreadyExistsException
 import com.flowcare.backend.common.dto.ErrorResponse
@@ -40,6 +43,21 @@ class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException::class)
     fun handleEmailAlreadyExists(ex: EmailAlreadyExistsException): ResponseEntity<ErrorResponse> {
         return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.message ?: "Email already exists")
+    }
+
+    @ExceptionHandler(SlotNotAvailableException::class)
+    fun handleSlotNotAvailable(ex: SlotNotAvailableException): ResponseEntity<ErrorResponse> {
+        return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.message ?: "Slot not available")
+    }
+
+    @ExceptionHandler(AppointmentNotFoundException::class)
+    fun handleAppointmentNotFound(ex: AppointmentNotFoundException): ResponseEntity<ErrorResponse> {
+        return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.message ?: "Appointment not found")
+    }
+
+    @ExceptionHandler(InvalidAppointmentStateException::class)
+    fun handleInvalidAppointmentState(ex: InvalidAppointmentStateException): ResponseEntity<ErrorResponse> {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex.message ?: "Invalid appointment state")
     }
 
     @ExceptionHandler(InvalidFileException::class)

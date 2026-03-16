@@ -41,7 +41,10 @@ data class Slot(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+
+    @Version
+    var version: Long = 0
 ) {
     fun isAvailable(): Boolean = bookedCount < capacity && deletedAt == null && isActive
 }
