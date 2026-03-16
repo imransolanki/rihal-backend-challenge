@@ -26,6 +26,7 @@ class SecurityConfig {
                 auth
                     .requestMatchers("/api/health").permitAll()
                     .requestMatchers("/api/auth/register").permitAll()
+                    .requestMatchers("/api/public/**").permitAll()
                     .anyRequest().authenticated()
             }
             .httpBasic { }

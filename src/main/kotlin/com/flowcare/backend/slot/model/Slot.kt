@@ -28,6 +28,9 @@ data class Slot(
     @Column(nullable = false)
     val capacity: Int = 1,
 
+    @Column(name = "booked_count", nullable = false)
+    var bookedCount: Int = 0,
+
     @Column(name = "is_active", nullable = false)
     val isActive: Boolean = true,
 
@@ -39,4 +42,6 @@ data class Slot(
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now()
-)
+) {
+    fun isAvailable(): Boolean = bookedCount < capacity && deletedAt == null && isActive
+}
