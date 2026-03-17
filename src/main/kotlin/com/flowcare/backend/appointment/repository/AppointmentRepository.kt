@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface AppointmentRepository : JpaRepository<Appointment, String> {
     fun findByCustomerIdOrderByCreatedAtDesc(customerId: String): List<Appointment>
+    fun countByCustomerId(customerId: String): Int
+    fun existsBySlotId(slotId: String): Boolean
 }

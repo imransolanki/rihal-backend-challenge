@@ -1,15 +1,24 @@
 package com.flowcare.backend.auth.service
 
 import com.flowcare.backend.auth.model.Role
+import com.flowcare.backend.auth.model.User
 import com.flowcare.backend.auth.model.UserPrincipal
+import com.flowcare.backend.auth.repository.UserRepository
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 
 @Service
-class BranchAccessService {
+class BranchAccessService(
+    private val userRepository: UserRepository
+) {
 
     private fun currentUser() =
         (SecurityContextHolder.getContext().authentication?.principal as? UserPrincipal)?.getUser()
+
+    fun getCurrentUser(username: String): User {
+        return userRepository.findByUsername(username)
+            .orElseThrow { IllegalStateException("User not found") }
+    }
 
     fun hasAccessToBranch(branchId: String): Boolean {
         val user = currentUser() ?: return false
@@ -21,10 +30,12 @@ class BranchAccessService {
     }
 
     fun isAdmin(): Boolean = currentUser()?.role == Role.ADMIN
+    fun isAdmin(user: User): Boolean = user.role == Role.ADMIN
     fun isBranchManager(): Boolean = currentUser()?.role == Role.BRANCH_MANAGER
     fun isStaff(): Boolean = currentUser()?.role == Role.STAFF
     fun isCustomer(): Boolean = currentUser()?.role == Role.CUSTOMER
 
     fun getCurrentUserId(): String? = currentUser()?.id
     fun getCurrentUserBranchId(): String? = currentUser()?.branchId
+    fun getUserBranchId(user: User): String = user.branchId ?: throw IllegalStateException("User has no branch")
 }

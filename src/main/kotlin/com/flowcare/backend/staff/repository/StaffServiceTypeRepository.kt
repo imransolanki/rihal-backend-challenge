@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface StaffServiceTypeRepository : JpaRepository<StaffServiceType, Int> {
     fun existsByStaffIdAndServiceTypeId(staffId: String, serviceTypeId: String): Boolean
+    fun findByStaffId(staffId: String): List<StaffServiceType>
 }

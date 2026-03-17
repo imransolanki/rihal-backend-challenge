@@ -60,5 +60,5 @@ interface SlotRepository : JpaRepository<Slot, String> {
         WHERE s.deletedAt IS NOT NULL
         AND s.deletedAt < :cutoffDate
     """)
-    fun findSoftDeletedBefore(cutoffDate: OffsetDateTime): List<Slot>
+    fun findSoftDeletedBeforeDate(cutoffDate: OffsetDateTime): List<Slot>
 }

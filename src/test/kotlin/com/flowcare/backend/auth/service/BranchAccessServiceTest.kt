@@ -3,15 +3,18 @@ package com.flowcare.backend.auth.service
 import com.flowcare.backend.auth.model.Role
 import com.flowcare.backend.auth.model.User
 import com.flowcare.backend.auth.model.UserPrincipal
+import com.flowcare.backend.auth.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.mock
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 
 class BranchAccessServiceTest {
 
-    private val service = BranchAccessService()
+    private val userRepository: UserRepository = mock()
+    private val service = BranchAccessService(userRepository)
 
     @AfterEach
     fun clearContext() = SecurityContextHolder.clearContext()
