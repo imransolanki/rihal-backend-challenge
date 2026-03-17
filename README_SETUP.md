@@ -60,25 +60,28 @@ src/main/kotlin/com/flowcare/backend/
 └── storage/         # File storage for ID documents
 ```
 
-## Implemented Stories
+## What's Implemented
 
-| # | Story | Status |
-|---|-------|--------|
-| 1 | Project Setup | ✅ |
-| 2 | Seed Data | ✅ |
-| 3 | Customer Registration | ✅ |
-| 4 | Authentication & Authorization | ✅ |
-| 5 | Public Branch & Service Discovery | ✅ |
-| 6 | Public Slot Viewing | ✅ |
-| 7 | Appointment Booking | ✅ |
-| 8 | View My Appointments | ✅ |
-| 9 | Cancel Appointment | ✅ |
-| 10 | Reschedule Appointment | ✅ |
-| 11 | Create Slot | ✅ |
-| 12 | Bulk Create Slots | ✅ |
-| 13 | Update/Delete Slot | ✅ |
-| 14-16 | Staff Appointment Management | ✅ |
-| 17 | Customer Information Viewing | ✅ |
-| 18 | Soft-Delete Cleanup | ✅ |
-| 19 | Audit Log Viewing & Export | ✅ |
-| 20 | Staff Listing | ✅ |
+### Core Infrastructure
+- Kotlin + Spring Boot 3 with PostgreSQL and Flyway migrations
+- Seed data auto-loaded on startup (branches, services, staff, customers, slots)
+- HTTP Basic Auth with role-based access control (ADMIN, BRANCH_MANAGER, STAFF, CUSTOMER)
+- Global exception handling with structured error responses
+- Audit logging for all sensitive actions (bookings, cancellations, schedule changes)
+
+### Customer-Facing
+- **Registration** — Multipart form with ID document upload, duplicate username/email detection
+- **Branch & Service Discovery** — Public endpoints to browse branches, services, and available time slots
+- **Appointment Booking** — Book, view, cancel, and reschedule appointments with slot capacity enforcement
+- **Attachment Download** — Retrieve appointment-related attachments
+
+### Staff & Manager Operations
+- **Slot Management** — Create, bulk create, update, and soft-delete time slots with overlap validation
+- **Staff Listing** — View staff members with service type assignments
+- **Customer Viewing** — List and view customer details; Branch Managers scoped to their branch
+
+### Admin Operations
+- **Audit Log Viewing & CSV Export** — Filter by date range, Branch Managers see only their branch logs
+- **Soft-Delete Cleanup** — Configurable retention period, bulk purge of expired soft-deleted slots (skips slots with appointments)
+- **System Configuration** — Manage retention period settings
+- **ID Document Download** — Admin-only access with audit trail
