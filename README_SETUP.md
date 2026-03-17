@@ -1,247 +1,84 @@
-# FlowCare Backend - Setup Instructions
+# FlowCare Backend - Setup & Run Guide
 
 ## Prerequisites
-- JDK 17 or higher
-- Docker and Docker Compose (for PostgreSQL)
-- Gradle 8.x (or use included wrapper)
+- JDK 17+
+- Docker & Docker Compose
+- Gradle 8.x (or use `./gradlew` wrapper)
 
-## Database Setup
+## Quick Start
 
-1. Start PostgreSQL using Docker Compose:
-   ```bash
-   docker-compose up -d
-   ```
-
-2. Verify PostgreSQL is running:
-   ```bash
-   docker ps
-   ```
-
-## Application Setup
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd rihal-backend-challenge
-   ```
-
-2. Copy environment configuration:
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Build the project:
-   ```bash
-   ./gradlew build
-   ```
-
-4. Run the application (migrations run automatically):
-   ```bash
-   ./gradlew bootRun
-   ```
-
-The application will start on `http://localhost:8080`
-
-## Verify Setup
-
-Test the health endpoint:
 ```bash
+# 1. Start PostgreSQL
+docker-compose up -d
+
+# 2. Run the application
+./gradlew bootRun
+
+# 3. Verify
 curl http://localhost:8080/api/health
 ```
 
-Expected response:
-```json
-{
-  "status": "UP",
-  "timestamp": "2026-03-15T10:00:00"
-}
-```
-
-Test the protected endpoint (should return 401):
-```bash
-curl http://localhost:8080/api/test/protected
-```
-
-Test with authentication (after seeding in Story 2):
-```bash
-curl -u admin:Admin@123 http://localhost:8080/api/test/protected
-```
-
-## Database Seeding
-
-The application automatically seeds the database on startup with data from `example.json`:
-- 2 branches (Muscat, Suhar)
-- 6 service types (3 per branch)
-- 10 users (1 admin, 2 managers, 4 staff, 3 customers)
-- 6 staff-service assignments
-- 14 slots
-- 2 appointments
-- 2 audit log entries
-
-### Seed Credentials
-
-| Username | Password | Role |
-|----------|----------|------|
-| admin | Admin@123 | ADMIN |
-| mgr_muscat | Manager@123 | BRANCH_MANAGER |
-| mgr_suhar | Manager@123 | BRANCH_MANAGER |
-| staff_muscat_1 | Staff@123 | STAFF |
-| staff_muscat_2 | Staff@123 | STAFF |
-| staff_suhar_1 | Staff@123 | STAFF |
-| staff_suhar_2 | Staff@123 | STAFF |
-| cust_ahmed | Customer@123 | CUSTOMER |
-| cust_fatima | Customer@123 | CUSTOMER |
-| cust_khalid | Customer@123 | CUSTOMER |
-
-### Verify Seeding
-
-```bash
-curl -u admin:Admin@123 http://localhost:8080/api/test/protected
-```
-
-### Idempotency
-
-Seeding uses PostgreSQL `INSERT ... ON CONFLICT` — running the app multiple times won't create duplicates.
-
-### Disable Seeding
-
-```bash
-SEED_ENABLED=false ./gradlew bootRun
-```
-
-Or in `application.yml`:
-```yaml
-seed:
-  enabled: false
-```
-
-## Customer Registration
-
-Register a new customer with ID document upload:
-
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -F "username=johndoe" \
-  -F "password=SecurePass123" \
-  -F "fullName=John Doe" \
-  -F "email=john.doe@example.com" \
-  -F "phone=+96890000001" \
-  -F "idDocument=@/path/to/id_document.jpg"
-```
-
-Response (201 Created):
-```json
-{
-  "id": "usr_cust_a1b2c3d4e5f6",
-  "username": "johndoe",
-  "fullName": "John Doe",
-  "email": "john.doe@example.com",
-  "phone": "+96890000001",
-  "message": "Registration successful"
-}
-```
-
-ID document requirements: JPEG/PNG/GIF/BMP, max 5 MB. Files stored in `./uploads/id_documents/`.
-
-After registration, authenticate with Basic Auth:
-```bash
-curl -u johndoe:SecurePass123 http://localhost:8080/api/test/protected
-```
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| DB_URL | PostgreSQL JDBC URL | jdbc:postgresql://localhost:5432/flowcare_db |
-| DB_USERNAME | Database username | flowcare_user |
-| DB_PASSWORD | Database password | flowcare_pass |
-| SPRING_PROFILES_ACTIVE | Active Spring profile | dev |
-
-## Authentication and Authorization
-
-FlowCare uses HTTP Basic Authentication with role-based access control (RBAC).
-
-### Roles
-
-| Role | Scope |
-|------|-------|
-| ADMIN | System-wide — all branches, all data |
-| BRANCH_MANAGER | Branch-scoped — only assigned branch |
-| STAFF | Branch-scoped — only assigned appointments |
-| CUSTOMER | Self-scoped — only own appointments |
-
-### Authentication
-
-All protected endpoints require Basic Auth:
-```bash
-curl -u username:password http://localhost:8080/api/endpoint
-```
-
-### Authorization Examples
-
-**Admin — system-wide access:**
-```bash
-curl -u admin:Admin@123 http://localhost:8080/api/test/admin
-# 200 OK: {"message":"Admin access granted - system-wide features available","role":"ADMIN",...}
-```
-
-**Branch Manager — branch-scoped access:**
-```bash
-# Own branch → 200 OK
-curl -u mgr_muscat:Manager@123 http://localhost:8080/api/test/manager/br_muscat_001
-
-# Other branch → 403 Forbidden
-curl -u mgr_muscat:Manager@123 http://localhost:8080/api/test/manager/br_suhar_001
-```
-
-**Staff — cannot create slots:**
-```bash
-# Staff endpoint → 200 OK
-curl -u staff_muscat_1:Staff@123 http://localhost:8080/api/test/staff
-
-# Slot creation → 403 Forbidden
-curl -X POST -u staff_muscat_1:Staff@123 http://localhost:8080/api/test/slots
-```
-
-**Customer — cannot access admin features:**
-```bash
-# Customer endpoint → 200 OK
-curl -u cust_ahmed:Customer@123 http://localhost:8080/api/test/customer
-
-# Admin endpoint → 403 Forbidden
-curl -u cust_ahmed:Customer@123 http://localhost:8080/api/test/admin-only
-```
-
-**Unauthenticated → 401 Unauthorized:**
-```bash
-curl http://localhost:8080/api/test/admin
-```
-
-### Public Endpoints (No Auth Required)
-
-- `GET /api/health`
-- `POST /api/auth/register`
-
-### HTTP Status Codes
-
-| Status | Meaning |
-|--------|---------|
-| 200 | Success |
-| 401 | No credentials or invalid credentials |
-| 403 | Valid credentials but insufficient permissions |
+The app starts on port `8080`. Seed data is loaded automatically on first run.
 
 ## Running Tests
 
 ```bash
-./gradlew test
+./gradlew clean test
 ```
 
-## Database Migrations
+## Seed Data Credentials
 
-Migrations are in `src/main/resources/db/migration/` and run automatically on startup.
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | `admin` | `Admin@123` |
+| Branch Manager | `mgr_muscat` | `Manager@123` |
+| Staff | `staff_muscat_1` | `Staff@123` |
+| Customer | `cust_ahmed` | `Customer@123` |
 
-## Troubleshooting
+## Authentication
 
-- **Database connection failed**: Ensure PostgreSQL is running (`docker ps`) and check credentials in `application-dev.yml`
-- **Port 8080 in use**: Add `server.port: 8081` to `application.yml`
-- **Flyway migration failed**: Run `./gradlew clean build` and check migration SQL syntax
+All protected endpoints use HTTP Basic Auth:
+
+```bash
+curl -u admin:Admin@123 http://localhost:8080/api/staff
+```
+
+## Project Structure
+
+```
+src/main/kotlin/com/flowcare/backend/
+├── appointment/     # Booking, cancellation, rescheduling
+├── audit/           # Audit log viewing & CSV export
+├── auth/            # Registration, authentication, customer management
+├── branch/          # Branch & service type discovery
+├── common/          # Health check, error handling
+├── config/          # System configuration (retention period)
+├── seed/            # Seed data loader
+├── service/         # Service type models
+├── slot/            # Slot management, public discovery, cleanup
+├── staff/           # Staff listing
+└── storage/         # File storage for ID documents
+```
+
+## Implemented Stories
+
+| # | Story | Status |
+|---|-------|--------|
+| 1 | Project Setup | ✅ |
+| 2 | Seed Data | ✅ |
+| 3 | Customer Registration | ✅ |
+| 4 | Authentication & Authorization | ✅ |
+| 5 | Public Branch & Service Discovery | ✅ |
+| 6 | Public Slot Viewing | ✅ |
+| 7 | Appointment Booking | ✅ |
+| 8 | View My Appointments | ✅ |
+| 9 | Cancel Appointment | ✅ |
+| 10 | Reschedule Appointment | ✅ |
+| 11 | Create Slot | ✅ |
+| 12 | Bulk Create Slots | ✅ |
+| 13 | Update/Delete Slot | ✅ |
+| 14-16 | Staff Appointment Management | ✅ |
+| 17 | Customer Information Viewing | ✅ |
+| 18 | Soft-Delete Cleanup | ✅ |
+| 19 | Audit Log Viewing & Export | ✅ |
+| 20 | Staff Listing | ✅ |

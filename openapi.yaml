@@ -1,0 +1,1018 @@
+openapi: 3.0.3
+info:
+  title: FlowCare Queue & Appointment Booking System
+  description: Backend API for FlowCare's appointment booking, slot management, and administrative features.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+security:
+  - basicAuth: []
+
+paths:
+  /api/health:
+    get:
+      tags: [Public]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/auth/register:
+    post:
+      tags: [Public]
+      summary: Register a new customer
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [username, password, fullName, email, phone, idDocument]
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                password:
+                  type: string
+                  minLength: 6
+                fullName:
+                  type: string
+                  maxLength: 200
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                  pattern: '^\+?[0-9]{10,15}$'
+                idDocument:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Customer registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '409':
+          description: Username or email already exists
+
+  /api/public/branches:
+    get:
+      tags: [Public]
+      summary: List all active branches
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BranchResponse'
+
+  /api/public/branches/{branchId}/services:
+    get:
+      tags: [Public]
+      summary: Get branch details with services
+      security: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchWithServicesResponse'
+
+  /api/public/slots:
+    get:
+      tags: [Public]
+      summary: Get available slots
+      security: []
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: serviceTypeId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableSlotResponse'
+
+  /api/appointments/book:
+    post:
+      tags: [Appointments]
+      summary: Book an appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookAppointmentRequest'
+      responses:
+        '201':
+          description: Appointment booked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+
+  /api/appointments/my:
+    get:
+      tags: [Appointments]
+      summary: List my appointments
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAppointmentResponse'
+
+  /api/appointments/{appointmentId}:
+    get:
+      tags: [Appointments]
+      summary: Get appointment detail
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+
+  /api/appointments/{appointmentId}/cancel:
+    post:
+      tags: [Appointments]
+      summary: Cancel an appointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Appointment cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+
+  /api/appointments/{appointmentId}/reschedule:
+    post:
+      tags: [Appointments]
+      summary: Reschedule an appointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleAppointmentRequest'
+      responses:
+        '200':
+          description: Appointment rescheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+
+  /api/appointments/{appointmentId}/attachment:
+    get:
+      tags: [Appointments]
+      summary: Download appointment attachment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /api/slots:
+    post:
+      tags: [Slot Management]
+      summary: Create a slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSlotRequest'
+      responses:
+        '201':
+          description: Slot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotResponse'
+    get:
+      tags: [Slot Management]
+      summary: List managed slots
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: serviceTypeId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageSlotResponse'
+
+  /api/slots/bulk:
+    post:
+      tags: [Slot Management]
+      summary: Bulk create slots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateSlotRequest'
+      responses:
+        '200':
+          description: Bulk creation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkCreateSlotsResponse'
+
+  /api/slots/{slotId}:
+    get:
+      tags: [Slot Management]
+      summary: Get slot detail
+      parameters:
+        - name: slotId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotResponse'
+    patch:
+      tags: [Slot Management]
+      summary: Update a slot
+      parameters:
+        - name: slotId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSlotRequest'
+      responses:
+        '200':
+          description: Slot updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotResponse'
+    delete:
+      tags: [Slot Management]
+      summary: Soft-delete a slot
+      parameters:
+        - name: slotId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Slot deleted
+
+  /api/staff:
+    get:
+      tags: [Staff]
+      summary: List staff members
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageStaffListResponse'
+
+  /api/staff/{staffId}:
+    get:
+      tags: [Staff]
+      summary: Get staff detail with service assignments
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffDetailResponse'
+
+  /api/customers:
+    get:
+      tags: [Customers]
+      summary: List customers
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCustomerListResponse'
+
+  /api/customers/{customerId}:
+    get:
+      tags: [Customers]
+      summary: Get customer detail
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetailResponse'
+
+  /api/customers/{customerId}/id-document:
+    get:
+      tags: [Customers]
+      summary: Download customer ID document (Admin only)
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Document not found
+
+  /api/audit-logs:
+    get:
+      tags: [Audit]
+      summary: View audit logs
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAuditLogResponse'
+
+  /api/admin/audit-logs/export:
+    get:
+      tags: [Audit]
+      summary: Export audit logs as CSV (Admin only)
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /api/admin/config/retention-period:
+    get:
+      tags: [Admin Config]
+      summary: Get retention period configuration
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetentionConfigResponse'
+    put:
+      tags: [Admin Config]
+      summary: Update retention period
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRetentionRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetentionConfigResponse'
+
+  /api/admin/slots/cleanup:
+    post:
+      tags: [Admin Config]
+      summary: Execute soft-delete slot cleanup
+      responses:
+        '200':
+          description: Cleanup summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CleanupSummaryResponse'
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+
+    RegistrationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+
+    BranchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        timezone:
+          type: string
+
+    BranchWithServicesResponse:
+      type: object
+      properties:
+        branch:
+          $ref: '#/components/schemas/BranchResponse'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceTypeResponse'
+
+    ServiceTypeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+
+    AvailableSlotResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        branchId:
+          type: string
+        serviceTypeId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+        availableCapacity:
+          type: integer
+        staff:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            fullName:
+              type: string
+
+    BookAppointmentRequest:
+      type: object
+      required: [slotId]
+      properties:
+        slotId:
+          type: string
+
+    RescheduleAppointmentRequest:
+      type: object
+      required: [newSlotId]
+      properties:
+        newSlotId:
+          type: string
+
+    AppointmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        branchId:
+          type: string
+        serviceTypeId:
+          type: string
+        slotId:
+          type: string
+        staffId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [BOOKED, CANCELLED, RESCHEDULED]
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+
+    CreateSlotRequest:
+      type: object
+      required: [branchId, serviceTypeId, startAt, endAt]
+      properties:
+        branchId:
+          type: string
+        serviceTypeId:
+          type: string
+        staffId:
+          type: string
+          nullable: true
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          minimum: 1
+          default: 1
+
+    UpdateSlotRequest:
+      type: object
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        staffId:
+          type: string
+          nullable: true
+        removeStaffAssignment:
+          type: boolean
+        capacity:
+          type: integer
+
+    SlotResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        branchId:
+          type: string
+        serviceTypeId:
+          type: string
+        staffId:
+          type: string
+          nullable: true
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+        bookedCount:
+          type: integer
+        isActive:
+          type: boolean
+
+    BulkCreateSlotsResponse:
+      type: object
+      properties:
+        successCount:
+          type: integer
+        failureCount:
+          type: integer
+        createdSlots:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlotResponse'
+        failures:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+              reason:
+                type: string
+
+    StaffListResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        branchId:
+          type: string
+        branchName:
+          type: string
+        isActive:
+          type: boolean
+
+    StaffDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        branchId:
+          type: string
+        branchName:
+          type: string
+        isActive:
+          type: boolean
+        serviceAssignments:
+          type: array
+          items:
+            type: object
+            properties:
+              serviceTypeId:
+                type: string
+              serviceName:
+                type: string
+
+    CustomerListResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        registeredAt:
+          type: string
+          format: date-time
+
+    CustomerDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        idDocumentPath:
+          type: string
+          nullable: true
+        appointmentCount:
+          type: integer
+        registeredAt:
+          type: string
+          format: date-time
+
+    AuditLogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        actorId:
+          type: string
+        actorRole:
+          type: string
+        actionType:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    RetentionConfigResponse:
+      type: object
+      properties:
+        retentionPeriodDays:
+          type: integer
+        description:
+          type: string
+
+    UpdateRetentionRequest:
+      type: object
+      required: [retentionPeriodDays]
+      properties:
+        retentionPeriodDays:
+          type: integer
+
+    CleanupSummaryResponse:
+      type: object
+      properties:
+        slotsDeleted:
+          type: integer
+        retentionPeriodDays:
+          type: integer
+        cutoffDate:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+
+    PageAppointmentResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppointmentResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+
+    PageSlotResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlotResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+
+    PageStaffListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffListResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+
+    PageCustomerListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerListResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+
+    PageAuditLogResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
