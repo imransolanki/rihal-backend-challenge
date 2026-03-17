@@ -22,9 +22,20 @@ class RegistrationController(
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun register(
-        @Valid @ModelAttribute request: RegistrationRequest,
+        @RequestParam username: String,
+        @RequestParam password: String,
+        @RequestParam fullName: String,
+        @RequestParam email: String,
+        @RequestParam phone: String,
         @RequestParam("idDocument") idDocument: MultipartFile
     ): ResponseEntity<RegistrationResponse> {
+        val request = RegistrationRequest(
+            username = username,
+            password = password,
+            fullName = fullName,
+            email = email,
+            phone = phone
+        )
         val response = registrationService.registerCustomer(request, idDocument)
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
